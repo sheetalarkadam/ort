@@ -97,7 +97,7 @@ jobs:
         --shm-size=1024m \
         --rm \
         --ipc=host \
-        --volume $(Build.SourcesDirectory)/ort_moe):/moe_src \
+        --volume $(Build.SourcesDirectory)/ort_moe:/moe_src \
         ${{variables.acpt_stable_image}} \
           bash -c "cd /moe_src/tests/ && mpirun -n 4 --allow-run-as-root coverage run --parallel-mode --source=../ort_moe/ -m pytest --with-mpi test_compression.py"
     displayName: 'Run Tensor Compression Unit Tests'
