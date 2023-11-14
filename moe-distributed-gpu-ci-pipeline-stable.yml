@@ -1,0 +1,129 @@
+trigger: none
+variables:
+- name: acpt_stable_image
+  value: $(IMAGE)
+
+jobs:
+- job: MOE_Linux_GPU_Distributed_Test
+
+  timeoutInMinutes: 120
+  pool: 'moelinuxpool'
+
+  steps:
+  - checkout: self
+    clean: true
+#    submodules: recursive
+
+  - script: |
+      docker pull ${{variables.acpt_stable_image}}
+    displayName: 'Pull Dockerfile'
+    condition: succeededOrFailed()
+    timeoutInMinutes: 30
+
+  - script: |
+      docker run \
+        --gpus all \
+        --shm-size=1024m \
+        --rm \
+        --ipc=host \
+        --volume $(Build.SourcesDirectory)/ort_moe:/moe_src \
+        ${{variables.acpt_stable_image}} \
+          bash -c "cd /moe_src/tests/ && mpirun -n 4 --allow-run-as-root coverage run --parallel-mode --source=../ort_moe/ -m pytest --with-mpi test_top2gating.py"
+    displayName: 'Run Top2Gating Unit Tests'
+    condition: succeededOrFailed()
+    timeoutInMinutes: 10
+
+  - script: |
+      docker run \
+        --gpus all \
+        --shm-size=1024m \
+        --rm \
+        --ipc=host \
+        --volume $(Build.SourcesDirectory)/ort_moe:/moe_src \
+        ${{variables.acpt_stable_image}} \
+          bash -c "cd /moe_src/tests/ && mpirun -n 4 --allow-run-as-root coverage run --parallel-mode --source=../ort_moe/ -m pytest --with-mpi test_moe.py"
+    displayName: 'Run MOE Unit Tests'
+    condition: succeededOrFailed()
+    timeoutInMinutes: 30
+
+  # Disable ORT tests until next Onnxruntime stable release. https://github.com/microsoft/onnxruntime/pull/12701 is required
+  # - script: |
+  #     docker run \
+  #       --gpus all \
+  #       --shm-size=1024m \
+  #       --rm \
+  #       --ipc=host \
+  #       --volume $(Build.SourcesDirectory):/moe_src \
+  #       ${{variables.acpt_stable_image}} \
+  #         bash -c "export USE_ORT=1 && export ORTMODULE_FALLBACK_POLICY='FALLBACK_DISABLE' && cd /moe_src/tests/ \
+  #         && mpirun -n 4 --allow-run-as-root pytest --with-mpi -m with_ort -v test_moe.py"
+  #   displayName: 'Run MOE ORT Unit Tests'
+  #   condition: succeededOrFailed()
+  #   timeoutInMinutes: 30
+
+  # - script: |
+  #     docker run \
+  #       --gpus all \
+  #       --shm-size=1024m \
+  #       --rm \
+  #       --ipc=host \
+  #       --volume $(Build.SourcesDirectory):/moe_src \
+  #       ${{variables.acpt_stable_image}} \
+  #         bash -c "export USE_ORT=1 && export ORTMODULE_FALLBACK_POLICY='FALLBACK_DISABLE' && cd /moe_src/tests/ \
+  #         && mpirun -n 4 --allow-run-as-root coverage run --parallel-mode --source=../ort_moe/ -m pytest --with-mpi -m with_ort1 -v test_moe.py"
+  #   displayName: 'Run MOE ORT1 Unit Tests'
+  #   condition: succeededOrFailed()
+  #   timeoutInMinutes: 10
+
+  - script: |
+      docker run \
+        --gpus all \
+        --shm-size=1024m \
+        --rm \
+        --ipc=host \
+        --volume $(Build.SourcesDirectory):/moe_src \
+        ${{variables.acpt_stable_image}} \
+          bash -c "cd /moe_src/tests/ && mpirun -n 4 --allow-run-as-root coverage run --parallel-mode --source=../ort_moe/ -m pytest --with-mpi test_grid.py"
+    displayName: 'Run DistributionGrid Unit Tests'
+    condition: succeededOrFailed()
+    timeoutInMinutes: 10
+
+  - script: |
+      docker run \
+        --gpus all \
+        --shm-size=1024m \
+        --rm \
+        --ipc=host \
+        --volume $(Build.SourcesDirectory):/moe_src \
+        ${{variables.acpt_stable_image}} \
+          bash -c "cd /moe_src/tests/ && mpirun -n 4 --allow-run-as-root coverage run --parallel-mode --source=../ort_moe/ -m pytest --with-mpi test_compression.py"
+    displayName: 'Run Tensor Compression Unit Tests'
+    condition: succeededOrFailed()
+    timeoutInMinutes: 10
+
+  - script: |
+      docker run \
+        --gpus all \
+        --shm-size=1024m \
+        --rm \
+        --ipc=host \
+        --volume $(Build.SourcesDirectory):/moe_src \
+        ${{variables.acpt_stable_image}} \
+          bash -c "cd /moe_src/tests/ && coverage combine && coverage report -m | tee coverage_log && python test_coverage.py"
+    displayName: 'Test Coverage'
+    condition: succeededOrFailed()
+    timeoutInMinutes: 30
+
+# Disable functional tests for now
+#  - script: |
+#      docker run \
+#        --gpus all \
+#        --shm-size=1024m \
+#        --rm \
+#        --ipc=host \
+#        --volume $(Build.SourcesDirectory):/moe_src \
+#        ${{variables.acpt_stable_image}} \
+#          bash -c "cd /moe_src/moe_examples/ && coverage run --parallel-mode --source=../../ort_moe/ functional_tests.py"
+#    displayName: 'Run MOE Functional Unit Tests'
+#    condition: succeededOrFailed()
+#    timeoutInMinutes: 60
