@@ -21,6 +21,7 @@ jobs:
     timeoutInMinutes: 30
 
   - bash: |
+      set -e
       pwd
       ls 
       docker run \
@@ -28,7 +29,7 @@ jobs:
         --shm-size=1024m \
         --rm \
         --ipc=host \
-        --volume ort/ort_moe:/moe_src \
+        --volume $(Build.SourcesDirectory)/ort/ort_moe:/moe_src \
         ${{variables.acpt_stable_image}} \
           bash -c "cd /moe_src/tests/ && mpirun -n 4 --allow-run-as-root coverage run --parallel-mode --source=../ort_moe/ -m pytest --with-mpi test_top2gating.py"
     displayName: 'Run Top2Gating Unit Tests'
