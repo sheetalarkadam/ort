@@ -1,0 +1,13 @@
+wezuo/ortmodule-sccl-pytorch-cuda-cudnn-devel:v1.0
+* ortmodule1.8.1-sccl_intr0.3.1_sccl_synh_2.0.0-pytorch1.9.0-cuda11.1-cudnn8-devel
+
+wezuo/ortmodule-sccl-pytorch-cuda-cudnn-devel:v2.0
+* ortmodule1.8.1-sccl_intr0.3.1_sccl_synh_2.1.2-pytorch1.9.0-cuda11.1-cudnn8-devel
+
+wezuo/ortmodule-sccl-pytorch-cuda-cudnn-devel:v2.1
+* ortmodule1.8.1-sccl_intr0.3.3_sccl_synh_2.1.2-pytorch1.9.0-cuda11.1-cudnn8-devel
+* This image resolve the non-SCCL alltoall on A100 cluster
+
+wezuo/ortmodule-sccl-pytorch-cuda-cudnn-devel:v4.0
+* ortmodule1.8.1-sccl_intr0.3.3_sccl_synh_2.1.2-pytorch1.9.0-cuda11.1-cudnn8-devel
+* Added Fairscale package

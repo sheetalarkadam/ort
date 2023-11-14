@@ -1,0 +1,17 @@
+1. To build the docker image, in the current directory
+docker build ./ -t wezuo/ortmodule-sccl-pytorch-cuda-cudnn-devel:image_version
+
+3. To push the image to docker hub
+docker push wezuo/ortmodule-sccl-pytorch-cuda-cudnn-devel:image_version
+
+4. Version control: v[x].[y]
+   y: for minor revision
+   x: for major update
+   Everytime one of the following component in the package changes, please increase x by 1. Everytime if bug is fixed in one of the component but not updating the version, please increase y by 1.
+      * ORTModule
+      * SCCL_interpreter
+      * SCCL_synthesizer
+      * pytorch
+      * cuda
+      * cudnn
+   Everytime when update the image, please update the ReleaseNote (in this folder) for detailed documentation of the versions of each component.

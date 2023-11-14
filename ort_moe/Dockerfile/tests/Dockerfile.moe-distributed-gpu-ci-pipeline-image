@@ -1,0 +1,16 @@
+FROM wezuo/ortmodule-sccl-pytorch-cuda-cudnn-devel:v2.1
+RUN echo "Preparing conatiner for MOE experiment"
+
+###################################################################################
+# Temporary Installation Directory
+###################################################################################
+ENV STAGE_DIR=/tmp
+RUN mkdir -p ${STAGE_DIR}
+
+###################################################################################
+# Install NCCL 2.8.4 and SCCL Runtime 0.3.1 to test the correctness and performance
+###################################################################################
+RUN cd /usr/src/ && wget https://github.com/parasailteam/nccl-master/archive/refs/tags/v0.3.1.tar.gz && tar zxf v0.3.1.tar.gz && cd nccl-master-0.3.1/ && make -j src.build NVCC_GENCODE="-gencode=arch=compute_70,code=sm_70"
+RUN cd /usr/src/ && git clone https://github.com/parasailteam/nccl-tests.git && cd nccl-tests && make -j MPI=1 NCCL_HOME=/usr/src/nccl-master-0.3.1/build/
+RUN cd /usr/src/ && wget https://github.com/NVIDIA/nccl/archive/refs/tags/v2.8.4-1.tar.gz && tar zxf v2.8.4-1.tar.gz && cd nccl-2.8.4-1/ && make -j src.build NVCC_GENCODE="-gencode=arch=compute_70,code=sm_70"
+RUN cd /usr/src/ && git clone https://github.com/NVIDIA/nccl-tests.git nccl-tests-baseline && cd nccl-tests-baseline && make -j MPI=1 NCCL_HOME=/usr/src/nccl-2.8.4-1/build/
