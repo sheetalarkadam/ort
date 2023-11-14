@@ -130,3 +130,42 @@ jobs:
 #    displayName: 'Run MOE Functional Unit Tests'
 #    condition: succeededOrFailed()
 #    timeoutInMinutes: 60
+
+#############################################################################
+# moe-distributed-gpu-ci-pipeline-image.yml
+
+  - script: |
+      docker build \
+        -f \
+        $(Build.SourcesDirectory)/ort_moe/Dockerfile/tests/Dockerfile.moe-distributed-gpu-ci-pipeline-image \
+        -t moe_distributed_tests_image \
+        .
+    displayName: 'Build Dockerfile'
+    condition: succeededOrFailed()
+    timeoutInMinutes: 60
+
+  - script: |
+      docker run \
+        --gpus all \
+        --shm-size=1024m \
+        --rm \
+        --ipc=host \
+        --volume $(Build.SourcesDirectory)/ort_moe:/moe_src \
+        moe_distributed_tests_image \
+          bash -c "cd /moe_src/tests/ && mpirun -n 4 --allow-run-as-root -x LD_LIBRARY_PATH=/usr/src/nccl-2.8.4-1/build/lib/ /usr/src/nccl-tests-baseline/build/alltoall_perf -b 128KB -e 1GB -f 2 -g 1 -c 1 -n 500 -w 100 -z 0  > /tmp/nccl.log && mpirun -n 4 --allow-run-as-root -x LD_LIBRARY_PATH=/usr/src/nccl-master-0.3.1/build/lib/ /usr/src/nccl-tests/build/alltoall_perf -b 128KB -e 1GB -f 2 -g 1 -c 1 -n 500 -w 100 -z 0 > /tmp/sccl.log && python nccl_output_processor.py /tmp/nccl.log /tmp/sccl.log"
+    displayName: 'Run nccl-tests with original NCCL and SCCL and compare the results'
+    condition: succeededOrFailed()
+    timeoutInMinutes: 60
+
+  - script: |
+      docker run \
+        --gpus all \
+        --shm-size=1024m \
+        --rm \
+        --ipc=host \
+        --volume $(Build.SourcesDirectory)/ort_moe:/moe_src \
+        moe_distributed_tests_image \
+          bash -c "cd /moe_src/tests/ && python test_uni_image.py"
+    displayName: 'Run Unified Dockerfile Tests'
+    condition: succeededOrFailed()
+    timeoutInMinutes: 60
